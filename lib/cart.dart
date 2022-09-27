@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cart_bloc/bloc/cart_bloc.dart';
 import 'package:flutter_cart_bloc/item.dart';
+import 'package:flutter_cart_bloc/main.dart';
 
 class Cart extends StatefulWidget {
   @override
@@ -15,12 +16,14 @@ class _CartState extends State<Cart> {
       appBar: AppBar(
         title: Text('Cart'),
       ),
-      body: BlocBuilder<CartBloc,List<Item>>(
-        bloc: BlocProvider.of<CartBloc>(context),
-        builder: (BuildContext context, List state) {
+      body: StreamBuilder(
+        stream: cartBloc.cartList,
+        builder: (context, snapshot) {
           var sum = 0;
-          if (state.length > 0) {
-            sum = state.map((item) => item.price).reduce((acc, e) => acc + e);
+          if (snapshot.data.length > 0) {
+            sum = snapshot.data
+                .map((item) => item.price)
+                .reduce((acc, e) => acc + e);
           }
           return Center(
             child: Text(

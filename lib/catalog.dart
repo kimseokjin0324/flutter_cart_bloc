@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_cart_bloc/cart.dart';
+import 'package:flutter_cart_bloc/main.dart';
 
 import 'bloc/cart_bloc.dart';
 import 'package:flutter_cart_bloc/item.dart';
@@ -12,13 +13,8 @@ class Catalog extends StatefulWidget {
 }
 
 class _CatalogState extends State<Catalog> {
-  List<Item> _itemList = itemList;
-
   @override
   Widget build(BuildContext context) {
-    final _cartBloc =
-        BlocProvider.of<CartBloc>(context); //-상위Main에서 cartBloc을 가져오기
-
     return Scaffold(
         appBar: AppBar(
           title: Text('Catalog'),
@@ -32,20 +28,22 @@ class _CatalogState extends State<Catalog> {
             )
           ],
         ),
-        body:BlocBuilder(
-            bloc: _cartBloc,
-            builder: (BuildContext context, List state) {
-              return ListView(
-                children: _itemList
-                    .map((item) => _buildItem(item, state, _cartBloc))
-                    .toList(),
-              );
-            },
-          ),
-        );
+        body: StreamBuilder(
+          stream: cartBloc.cartList,
+          builder: (context, snapshot) {
+            return ListView(
+              children: cartBloc.itemList
+                  .map((item) => _buildItem(item, snapshot.data))
+                  .toList(),
+            );
+          },
+        ));
   }
 
-  Widget _buildItem(Item item, List state, CartBloc bloc) {
+  Widget _buildItem(
+    Item item,
+    List<Item> state,
+  ) {
     final isChecked = state.contains(item); //-state는 내가 선택한 리스트
 
     return Padding(
@@ -61,13 +59,11 @@ class _CatalogState extends State<Catalog> {
               ? Icon(Icons.check, color: Colors.red)
               : Icon(Icons.check),
           onPressed: () {
-            setState(() {
-              if (isChecked) {
-                bloc.add(CartEvent(CartEventType.remove, item));
-              } else {
-                bloc.add(CartEvent(CartEventType.add, item));
-              }
-            });
+            if (isChecked) {
+              cartBloc.add(CartEvent(CartEventType.remove, item));
+            } else {
+              cartBloc.add(CartEvent(CartEventType.add, item));
+            }
           },
         ),
       ),
